@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="API\Class1.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspose.Words" Version="18.7.0" />
+    <PackageReference Include="DotNetCore.NPOI" Version="1.2.1" />
+    <PackageReference Include="Senparc.Weixin" Version="6.7.401" />
+    <PackageReference Include="Senparc.Weixin.MP" Version="16.10.401" />
+    <PackageReference Include="Senparc.Weixin.Work" Version="3.3.5" />
+    <PackageReference Include="Senparc.Weixin.WxOpen" Version="3.8.401" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\iMES.Bi.Data\iMES.Bi.Data.csproj" />
+    <ProjectReference Include="..\iMES.Core\iMES.Core.csproj" />
+  </ItemGroup>
+
+</Project>
