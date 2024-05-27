@@ -1,0 +1,21 @@
+{
+    "data": [
+        {
+            "name": "阿朱泡泡体",
+            "family": "azpp",
+            "url": "../ff/azpp.ttf"
+        },
+        {
+            "name": "站酷小薇LOGO体",
+            "family": "zkxwlogo",
+            "url": "../ff/zkxwlogo.woff"
+        },
+        {
+            "name": "问藏书房",
+            "family": "wcsf",
+            "url": "../ff/wcsf.ttf"
+        }
+    ],
+    "success": true,
+    "message": "ok"
+}

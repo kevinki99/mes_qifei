@@ -1,0 +1,597 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>仪表盘浏览</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="//at.alicdn.com/t/font_533449_naak7odp5x.css">
+    <link href="/BiManage/CSS/bootstrap3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css" href="/BiManage/CSS/index.css?v=1">
+    <link rel="stylesheet" type="text/css" href="/BiManage/CSS/default.css">
+    <link href="/BiManage/JS/element/index.css" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css" href="/BiManage/CSS/FORMBI.css?v=8">
+    <style>
+        .tools .el-card {
+            margin: 5px 5px;
+            border-radius: 0px;
+        }
+
+        .tools .el-card__body {
+            padding: 10px 0;
+            text-align: left;
+            padding-left: 5px;
+        }
+        .el-button--mini, .el-button--mini.is-round {
+            padding: 9px 16px !important;
+        }
+        .bbsx .el-form-item {
+            max-height: 75PX;
+        }
+
+        .widthmax {
+            width: 100%
+        }
+
+        .boxshadow {
+            -webkit-box-shadow: 0 1px 3px #ccc;
+            -moz-box-shadow: 0 1px 3px #ccc;
+            -o-box-shadow: 0 1px 3px #ccc;
+            -ms-box-shadow: 0 1px 3px #ccc;
+            box-shadow: 0 1px 3px #ccc;
+        }
+    </style>
+</head>
+<body style="background-color: #e7ecf1; font-size:12px">
+
+    <div id="Loading">
+        <div class="loader-inner ball-beat">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
+    <div id="DATABI_YBZZ" class="FormV maindiv" style="display:none">
+
+        <nav class="navbar navbar-inverse box-shadow" style="border-radius: 0; background-color: #fff; border-color: #fff; " v-if="vtype=='0'">
+            <div class="head-center clearfix c2">
+                <div class="logo c666 pull-left" v-text="FormName">
+                </div>
+
+            </div>
+        </nav>
+        <div class="container containerb" v-bind:class="{ widthmax: vtype=='1'}" style="padding:0">
+            <div class="menu-general ft16 box-shadow hidden">
+                <ul>
+                    <li v-text="FormName" class="active">仪表盘设计</li>
+
+                </ul>
+            </div>
+            <div class="main-content ft16   padding10 c666  clearfix" v-bind:class="{ boxshadow:vtype=='0'}">
+                <div v-show="tab1=='0'">
+                    <el-row id="conwig">
+                        <el-form ref="form" label-position="top" :model="FormData">
+                            <component class="widget" v-for="(item, index) in FormData.wigetitems" :key="item.wigdetcode" :index="index" :is="item.component" :id="item.wigdetcode" :pzoption="item" style="margin-bottom:10px" @data-change="datachange"></component>
+                        </el-form>
+                    </el-row>
+                </div>
+                <div v-show="tab1=='1'" class="bbsx">
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+
+    </div>
+    <script src="/BiManage/JS/vue.js"></script>
+    <script type="text/javascript" src="/BiManage/JS/jquery-1.11.2.min.js"></script>
+    <script src="/BiManage/CSS/bootstrap3.3.5/js/bootstrap.js"></script>
+    <script src="/BiManage/JS/lodash.min.js"></script>
+    <script src="/BiManage/JS/httpVueLoader.js"></script>
+    <script src="/BiManage/JS/layer/layer.js"></script>
+    <script src="/BiManage/JS/Echart/echarts.min.js"></script>
+    <script src="/BiManage/JS/v-charts/index.min.js"></script>
+    <!-- 引入组件库 -->
+    <script src="/BiManage/JS/element/element.js"></script>
+    <script src="/BiManage/JS/element/pltable/index.js"></script>
+    <script src="/BiManage/JS/bijs.js?v=5"></script>
+    <script src="data-set.min.js"></script>
+
+
+    <script>
+        var app = new Vue({
+            el: '#DATABI_YBZZ',
+            components: {
+                'qjDate': httpVueLoader('/BiManage/AppPage/DATABI/vue/Yb_Date.vue'),
+                'qjDateSE': httpVueLoader('/BiManage/AppPage/DATABI/vue/Yb_DateSE.vue'),
+                'qjInput': httpVueLoader('/BiManage/AppPage/DATABI/vue/Yb_Input.vue'),
+                'qjBtn': httpVueLoader('/BiManage/AppPage/DATABI/vue/Yb_Btn.vue'),
+                'qjSelect': httpVueLoader('/BiManage/AppPage/DATABI/vue/Yb_Select.vue'),
+                'qjTable': httpVueLoader('/BiManage/AppPage/DATABI/vue/Yb_Table.vue'),
+                'qjTab': httpVueLoader('/BiManage/AppPage/DATABI/vue/qjTab.vue'),
+                'qjKBan': httpVueLoader('/BiManage/AppPage/DATABI/vue/Yb_KB.vue'),
+                'qjChart': httpVueLoader('/BiManage/AppPage/DATABI/vue/Yb_Chart.vue'),
+                'qjCascader': httpVueLoader('/BiManage/AppPage/DATABI/vue/Yb_Cascader.vue')
+
+            },
+            data: {
+                vtype: ComFunJS.getQueryString('vtype', '0'),
+                yl: ComFunJS.getQueryString('yl', 'N'),
+                loading: true,
+                fmdata: "",
+                tab1: "0",
+                dataid: "0",
+                isview: true,//是否浏览模式,判断需不需要加载默认值
+                dataset: [],//数据集
+                widgetname: { "qjInput": "输入框", "qjSelect": "单选", "qjMSelect": "多选", "qjDate": "日期时间组件", "qjSelbranch": "部门选择" },
+                FormName: "",
+                tabtype: "0",
+                formop: { width: "0", addurl: "/BiManage/AppPage/FORMBI/FormAdd.html?pdid=" + ComFunJS.getQueryString('ID'), mangeurl: "/BiManage/AppPage/FORMBI/FormManage.html?piid=?", listurl: "/BiManage/AppPage/FORMBI/FormTJ.html?pdid=" + ComFunJS.getQueryString('ID') },
+                FiledSetVisible: false,
+                tabname: "",
+                FormData: {
+                    wigetitems: []
+                },
+                nowwidget: {
+                },
+                readySize: 0
+
+            },
+            created() {
+                document.body.removeChild(document.getElementById('Loading'))
+                var divBJ = document.getElementById('DATABI_YBZZ');
+                divBJ.style.display = "block";
+                this.dataid = ComFunJS.getQueryString("id", "0");
+
+            },
+            methods: {
+                seltab: function (tabtype) {
+                    this.tabtype = tabtype;
+                },
+                getwiget: function (wiggetcode) {
+                    var datawig = null;
+                    _.forEach(app.FormData.wigetitems, function (item) {
+                        if (item.wigdetcode == wiggetcode) {
+                            datawig = item;
+                        }
+                    })
+                    return datawig;
+                },
+                addchildwig() {
+                    this.readySize++
+                    // 检查进度是否设置的colSize一致
+                    if (this.readySize == this.FormData.wigetitems.length) {
+                        app.GetYBData();
+                        //  这时候所有的子组件已加载完成
+                        this.layout();
+
+                    }
+                },
+                clearwigdata: function () {
+                    app.FormData.wigetitems.forEach(function (wig) {
+                        wig.dataset = [];
+                    })
+                },
+                layout: function () {
+                    app.FormData.wigetitems.forEach(function (wig) {
+                        if (wig.component == "qjTab") {
+                            wig.childpro.Tabs.forEach((tab, index) => {
+                                tab.content.forEach((tabitem, indexitem) => {
+                                    $("#" + wig.wigdetcode).find(".el-tab-pane").eq(index).append($("#" + tabitem.wigdetcode));
+                                })
+                            })
+                        }
+                    })
+                },
+                jxparam: function (val) {
+                    //解析参数
+                    var valsql = "";
+                    if (val) {
+                        valsql = val;
+                        var regex2 = /\[(.+?)\]/g;
+                        var temp = val.match(regex2);
+                        _.forEach(temp, function (obj) {
+                            var tempqval = "";
+                            obj = _.trim(obj, '[');
+                            obj = _.trim(obj, ']');
+                            if (_.startsWith(obj, '&')) {
+                                tempqval = ComFunJS.getQueryString(obj.split('&')[1]);
+                                valsql = _.replace(valsql, '[' + obj + ']', tempqval);
+                            }
+                            if (_.startsWith(obj, '@')) {
+                                tempqval = ComFunJS.getCookie(obj.split('@')[1]);
+                                valsql = _.replace(valsql, '[' + obj + ']', tempqval);
+                            }
+                            if (_.startsWith(obj, '$')) {
+                                var wig = _.find(app.FormData.wigetitems, function (o) {
+                                    return o.wigdetcode == obj.split('$')[1];
+                                })
+                                tempqval = wig.value;//获取组件值
+                                valsql = _.replace(valsql, '[' + obj + ']', tempqval);
+                            }
+                        })
+                    }
+                    return valsql;
+                },
+                jxfiled: function (nowwidget, jxdata) {
+                    var js = [];
+                    if (_.isArray(jxdata)) {
+                        js = jxdata || JSON.parse(nowwidget.staticdata);
+
+                    } else {
+                        js = JSON.parse(jxdata || nowwidget.staticdata);
+                    }
+                    nowwidget.tabfiledlist = [];
+                    _.forEach(_.keys(js[0]), function (value) {
+                        var fid = {
+                            ColumnName: value,
+                            ColumnType: "Str",
+                            Dimension: "1",
+                            Name: value,
+                        }
+                        if (_.findIndex(nowwidget.tabfiledlist, function (o) { return o.ColumnName == fid.ColumnName; }) == -1) {
+                            nowwidget.tabfiledlist.push(fid);
+                        }
+                    });
+                },//解析数据维度
+                inityb: function () {
+                    var param = {
+                        P1: app.dataid,
+                        Action: "DATABI_GETYBBYID"
+                    };
+                    $.getJSON('/api/Bll/ExeAction', param, function (resultData) {
+                        if (resultData.ErrorMsg == "") {
+                            app.FormName = resultData.Result.Name;
+                            if (app.yl == "Y") {
+                                app.FormData.wigetitems = JSON.parse(resultData.Result.YBContent);
+
+                            } else {
+                                app.FormData.wigetitems = JSON.parse(resultData.Result.YBOption);
+                            }
+                            app.$notify({
+                                title: '成功',
+                                message: '页面加载成功',
+                                type: 'success'
+                            });
+                            app.loading = false;
+                        }
+                    })
+
+                },
+                addwd: function (ColumnName, widget) {
+                    if (_.findIndex(widget.filist, function (o) { return o.colid == ColumnName }) == -1 && _.findIndex(widget.wdlist, function (o) { return o.colid == ColumnName }) == -1 && _.findIndex(widget.dllist, function (o) { return o.colid == ColumnName }) == -1) {
+                        var temp = _.find(widget.tabfiledlist, { 'ColumnName': ColumnName });
+                        var wd = { "colid": temp.ColumnName, "colname": temp.Name, "coltype": temp.ColumnType, "width": "", "ishj": false, "caltype": "sum", "istip": true, "isuser": "Y", "order": "", "bindwig": "", options: [], querydata: [], mapdata: [] };
+                        widget.wdlist.push(wd)
+
+                    } else {
+                        app.$notify({
+                            title: '警告',
+                            message: '已存在该字段',
+                            type: 'warning'
+                        });
+                    }
+                },
+                adddl: function (ColumnName, widget) {
+                    if (_.findIndex(widget.filist, function (o) { return o.colid == ColumnName }) == -1 && _.findIndex(widget.wdlist, function (o) { return o.colid == ColumnName }) == -1 && _.findIndex(widget.dllist, function (o) { return o.colid == ColumnName }) == -1) {
+                        var temp = _.find(widget.tabfiledlist, { 'ColumnName': ColumnName });
+                        var wd = { "colid": temp.ColumnName, "colname": temp.Name, "coltype": temp.ColumnType, "width": "", "ishj": false, "caltype": "count", "istip": true, "isuser": "Y", "order": "", "bindwig": "", options: [], querydata: [], mapdata: [] };
+                        widget.dllist.push(wd)
+
+                    } else {
+                        app.$notify({
+                            title: '警告',
+                            message: '已存在该字段',
+                            type: 'warning'
+                        });
+                    }
+                },
+                datachange: function (chidata) {
+                    app.nowwidget.childpro = JSON.parse(chidata);
+                },
+                datamange: function (data, nowwidget) {
+                    const dv = new DataSet.View().source(data);
+                    var redata = [];
+
+                    //数据过滤
+                    //获取数据筛选条件
+                    var qdata = [];
+                    _.forEach(nowwidget.wdlist, function (wd) {
+                        if (wd.querydata.length > 0) {
+                            _.forEach(wd.querydata, function (wdq) {
+                                qdata.push({ colid: wd.colid, cal: wdq.cal, glval: wdq.glval });
+                            })
+                        }
+                    })
+                    _.forEach(nowwidget.dllist, function (dl) {
+                        if (dl.querydata.length > 0) {
+                            _.forEach(dl.querydata, function (dlq) {
+                                qdata.push({ colid: dl.colid, cal: dlq.cal, glval: dlq.glval });
+                            })
+                        }
+                    })
+                    _.forEach(nowwidget.filist, function (fi) {
+                        if (fi.querydata.length > 0) {
+                            _.forEach(fi.querydata, function (fiq) {
+                                qdata.push({ colid: fi.colid, cal: fiq.cal, glval: fiq.glval });
+                            })
+                        }
+                    })
+
+                    _.forEach(qdata, function (q) {
+                        var calval = app.jxparam(q.glval);
+                        if (calval) {
+                            switch (q.cal) {
+                                case "0":    //等于
+                                    {
+                                        dv.transform({
+                                            type: 'filter',
+                                            callback(row) { // 判断某一行是否保留，默认返回true
+                                                return row[q.colid] == calval;
+                                            }
+                                        });
+                                    }
+                                    break;
+                                case "1":    //小于
+                                    {
+                                        dv.transform({
+                                            type: 'filter',
+                                            callback(row) { // 判断某一行是否保留，默认返回true
+                                                return row[q.colid] < calval;
+                                            }
+                                        });
+                                    }
+                                    break;
+                                case "2":    //大于
+                                    {
+                                        dv.transform({
+                                            type: 'filter',
+                                            callback(row) { // 判断某一行是否保留，默认返回true
+                                                return row[q.colid] > calval;
+                                            }
+                                        });
+                                    }
+                                    break;
+                                case "3":    //小于
+                                    {
+                                        dv.transform({
+                                            type: 'filter',
+                                            callback(row) { // 判断某一行是否保留，默认返回true
+                                                return row[q.colid] != calval;
+                                            }
+                                        });
+                                    }
+                                    break;
+                                case "4":    //包含
+                                    {
+                                        dv.transform({
+                                            type: 'filter',
+                                            callback(row) { // 判断某一行是否保留，默认返回true
+                                                return row[q.colid].indexOf(calval) > -1;
+                                            }
+                                        });
+                                    }
+                                    break;
+                                default: {
+
+                                }
+                            }
+                        }
+
+
+                    })
+
+                    //数据过滤
+                    //dv.transform({
+                    //    type: 'filter',
+                    //    callback(row) { // 判断某一行是否保留，默认返回true
+                    //        return row.year > 1998;
+                    //    }
+                    //});
+
+                    //数据映射
+                    //dv.transform({
+                    //    type: 'map',
+                    //    callback(row) { // 加工数据后返回新的一行，默认返回行数据本身
+                    //        row.newCol = row.xxx + row.yyy;
+                    //        return row;
+                    //    }
+                    //});
+                    //字段过滤
+                    var filds = _.concat(_.map(nowwidget.wdlist, 'colid'), _.map(nowwidget.dllist, 'colid'));
+                    if (filds.length > 0) {
+                        dv.transform({
+                            type: 'pick',
+                            fields: filds // 决定保留哪些字段，如果不传，则返回所有字段
+                        });
+                    }
+                    //统计
+
+                    var tjfilds = _.map(nowwidget.dllist, 'colid');
+                    if (tjfilds.length > 0) {
+                        var operations = _.map(nowwidget.dllist, 'caltype');
+                        var groupBy = _.map(nowwidget.wdlist, 'colid');
+                        _.forEach(tjfilds, function (filed) {
+                            dv.transform({
+                                type: 'map',
+                                callback(row) { // 加工统计数据,避免出现无法统计的数据
+                                    row[filed] = row[filed] * 1;
+                                    return row;
+                                }
+                            });
+                        })
+
+                        dv.transform({
+                            type: 'aggregate', // 别名summary
+                            fields: tjfilds,        // 统计字段集
+                            operations: operations,    // 统计操作集
+                            as: tjfilds,            // 存储字段集
+                            groupBy: groupBy        // 分组字段集
+                        })
+                    }
+                    //排序
+                    // wigget.dataorder = { prop: '', order: '' };
+                    if (nowwidget.dataorder.prop) {
+                        dv.transform({
+                            type: 'sort-by',
+                            fields: [nowwidget.dataorder.prop], // 根据指定的字段集进行排序，与lodash的sortBy行为一致
+                            order: nowwidget.dataorder.order        // 默认为 ASC，DESC 则为逆序
+                        })
+                    }
+                    redata = dv.rows;
+                    //取子集
+                    if (nowwidget.datacount != '0') {
+                        redata = _.slice(redata, 0, nowwidget.datacount)
+
+                    }
+                    return redata;
+                },
+
+                GetYBData: function () {
+                    for (var i = 0; i < app.FormData.wigetitems.length; i++) {
+                        var nowwidget = app.FormData.wigetitems[i];
+                        if (nowwidget.wigdetype == "dwig") {
+                            app.UpdateYBData(nowwidget)
+                        }
+                    }
+                },
+                UpdateYBData: function (nowwidget, callback) {
+                    if (nowwidget.datatype == '2') {//静态数据
+                        try {
+                            var js = JSON.parse(nowwidget.staticdata);
+                            var lastdata = app.datamange(js, nowwidget);
+                            nowwidget.dataset = lastdata;
+                        } catch (e) {
+                            app.$notify({
+                                title: '失败',
+                                message: '错误得JSON格式',
+                                type: 'error'
+                            });
+                        }
+                        return;
+                    }
+
+
+                    //需要先克隆一个对象,不然没法解析参数
+                    var tempnow = _.cloneDeep(nowwidget);
+                    if (tempnow.apiurl.indexOf("http:") == -1) {
+                        tempnow.apiurl = window.document.location.origin + '/' + tempnow.apiurl;
+                    }
+                    if (tempnow.datatype == '3' || tempnow.datatype == '1') {
+                        //处理存储过程得参数
+                        _.forEach(tempnow.proqdata, function (obj) {
+                            obj.pvalue = app.jxparam(obj.pvalue);
+                        })
+
+                    } else {
+                        //处理查询参数
+                        _.forEach(tempnow.wdlist, function (wd) {
+                            if (wd.querydata.length > 0) {
+                                _.forEach(wd.querydata, function (wdq) {
+                                    wdq.glval = app.jxparam(wdq.glval);
+
+                                })
+                            }
+                        })
+                        _.forEach(tempnow.dllist, function (dl) {
+                            if (dl.querydata.length > 0) {
+                                _.forEach(dl.querydata, function (dlq) {
+                                    dlq.glval = app.jxparam(dlq.glval);
+                                })
+                            }
+                        })
+                        _.forEach(tempnow.filist, function (fi) {
+                            if (fi.querydata.length > 0) {
+                                _.forEach(fi.querydata, function (fiq) {
+                                    fiq.glval = app.jxparam(fiq.glval);
+                                })
+                            }
+                        })
+                        //处理查询参数
+                    }
+
+                    var pageNo = 1;
+                    var pageSize = 0;
+                    if (nowwidget.component == "qjTable") {
+                        pageNo = nowwidget.childpro.nowpage;
+                        pageSize = nowwidget.childpro.pagesize;
+                    }
+                    var param = {
+                        P1: JSON.stringify(tempnow),
+                        pagecount: nowwidget.datacount,
+                        pageNo: pageNo,
+                        pageSize: pageSize,
+                        Action: "DATABI_GETYBPTOKEN"
+                    };
+                    $.getJSON('/api/Bll/ExeAction', param, function (resultData) {
+                        if (!resultData.ErrorMsg) {
+                            nowwidget.dataset = [];
+                            if (nowwidget.datatype == "0") {
+                                nowwidget.datatotal = resultData.DataLength;
+                                nowwidget.dataset = resultData.Result;
+                                if (callback) {
+                                    callback.call(tempdata);
+                                }
+                            } else {
+                                if (resultData.Result) {
+                                    try {
+                                        if (nowwidget.datatype == "1" && nowwidget.apiurl.indexOf("http:") == -1) {
+                                            resultData.Result = JSON.parse(resultData.Result).Result;//本地服务处理API
+                                        }
+                                        app.jxfiled(nowwidget, resultData.Result)
+                                        var tempdata = [];
+                                        if (_.isArray(resultData.Result)) {
+                                            tempdata = resultData.Result;
+
+                                        } else {
+                                            tempdata = JSON.parse(resultData.Result);
+                                        }
+                                        var lastdata = app.datamange(tempdata, nowwidget);
+                                        nowwidget.dataset = lastdata;
+                                        if (callback) {
+                                            callback.call(tempdata);
+                                        }
+                                    } catch (e) {
+                                        app.$notify({
+                                            title: '失败',
+                                            message: '获取数据格式错误',
+                                            type: 'error'
+                                        });
+                                    }
+                                }
+                            }
+                            if (nowwidget.component == "qjTable") {
+                                nowwidget.childpro.loading = false;
+                            }
+                        }
+                    })
+
+                }
+
+            },
+            mounted: function () {
+                var pro = this;
+                pro.$nextTick(function () {
+                    pro.inityb();
+                    if (!ComFunJS.isPC()) {
+                        pro.vtype = "1";
+                    }
+                    if (pro.vtype == "1") {
+                        $("body").addClass("mob")
+
+                    }
+
+
+                })
+
+            }
+        })
+
+
+    </script>
+</body>
+
+</html>
